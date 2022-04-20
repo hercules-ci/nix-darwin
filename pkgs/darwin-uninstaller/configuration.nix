@@ -16,6 +16,8 @@ with lib;
   system.activationScripts.postUserActivation.text = mkAfter ''
     if test -L ~/Applications; then
         rm ~/Applications
+    elif test -L ~/Applications/Nix\ Apps; then
+        rm ~/Applications/Nix\ Apps
     fi
 
     if test -L ~/.nix-defexpr/channels/darwin; then
@@ -29,10 +31,10 @@ with lib;
     fi
 
     if test -O /nix/store; then
-        l=$(readlink /Library/LaunchDaemons/org.nixos.nix-daemon.plist) || true
-        if test "$l" != "/nix/var/nix/profiles/default/Library/LaunchDaemons/org.nixos.nix-daemon.plist"; then
+        if ! test -e /Library/LaunchDaemons/org.nixos.nix-daemon.plist; then
+            sudo rm /Library/LaunchDaemons/org.nixos.nix-daemon.plist || true
             sudo launchctl remove org.nixos.nix-daemon 2> /dev/null || true
-            sudo ln -sfn /nix/var/nix/profiles/default/Library/LaunchDaemons/org.nixos.nix-daemon.plist /Library/LaunchDaemons/org.nixos.nix-daemon.plist
+            sudo cp /nix/var/nix/profiles/default/Library/LaunchDaemons/org.nixos.nix-daemon.plist /Library/LaunchDaemons/org.nixos.nix-daemon.plist
             sudo launchctl load -w /Library/LaunchDaemons/org.nixos.nix-daemon.plist
         fi
 

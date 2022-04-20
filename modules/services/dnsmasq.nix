@@ -38,7 +38,7 @@ in
       type = types.attrs;
       default = {};
       description = "List of domains that will be redirected by the DNSmasq.";
-      example = literalExample ''
+      example = literalExpression ''
         { localhost = "127.0.0.1"; }
         '';
     };
@@ -63,7 +63,10 @@ in
       name = "resolver/${domain}";
       value = {
         enable = true;
-        text = "nameserver ${cfg.bind}.${toString cfg.port}";
+        text = ''
+          port ${toString cfg.port}
+          nameserver ${cfg.bind}
+          '';
       };
     }) (builtins.attrNames cfg.addresses));
   };

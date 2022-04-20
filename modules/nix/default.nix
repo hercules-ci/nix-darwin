@@ -25,25 +25,18 @@ let
           ${optionalString cfg.useDaemon ''
             build-users-group = nixbld
           ''}
-          ${if isNix20 then "max-jobs" else "build-max-jobs"} = ${toString (cfg.maxJobs)}
-          ${if isNix20 then "cores" else "build-cores"} = ${toString (cfg.buildCores)}
-          ${if isNix20 then "sandbox" else "build-use-sandbox"} = ${if (builtins.isBool cfg.useSandbox) then boolToString cfg.useSandbox else cfg.useSandbox}
+          max-jobs = ${toString (cfg.maxJobs)}
+          cores = ${toString (cfg.buildCores)}
+          sandbox = ${if (builtins.isBool cfg.useSandbox) then boolToString cfg.useSandbox else cfg.useSandbox}
           ${optionalString (cfg.sandboxPaths != []) ''
-            ${if isNix20 then "extra-sandbox-paths" else "build-sandbox-paths"} = ${toString cfg.sandboxPaths}
+            extra-sandbox-paths = ${toString cfg.sandboxPaths}
           ''}
-          ${if isNix20 then "substituters" else "binary-caches"} = ${toString cfg.binaryCaches}
-          ${if isNix20 then "trusted-substituters" else "trusted-binary-caches"} = ${toString cfg.trustedBinaryCaches}
-          ${if isNix20 then "trusted-public-keys" else "binary-cache-public-keys"} = ${toString cfg.binaryCachePublicKeys}
-          ${if isNix20 then ''
-            require-sigs = ${if cfg.requireSignedBinaryCaches then "true" else "false"}
-          '' else ''
-            signed-binary-caches = ${if cfg.requireSignedBinaryCaches then "*" else ""}
-          ''}
+          substituters = ${toString cfg.binaryCaches}
+          trusted-substituters = ${toString cfg.trustedBinaryCaches}
+          trusted-public-keys = ${toString cfg.binaryCachePublicKeys}
+          require-sigs = ${if cfg.requireSignedBinaryCaches then "true" else "false"}
           trusted-users = ${toString cfg.trustedUsers}
           allowed-users = ${toString cfg.allowedUsers}
-          ${optionalString (isNix20 && !cfg.distributedBuilds) ''
-            builders =
-          ''}
           $extraOptions
           END
         '';
@@ -55,7 +48,7 @@ in
       type = types.either types.package types.path;
       default = pkgs.nix;
       defaultText = "pkgs.nix";
-      example = literalExample "pkgs.nixUnstable";
+      example = literalExpression "pkgs.nixUnstable";
       description = ''
         This option specifies the package or profile that contains the version of Nix to use throughout the system.
         To keep the version of nix originally installed the default profile can be used.
@@ -352,6 +345,58 @@ in
         ordering will be used.
       '';
     };
+
+    nix.registry = mkOption {
+      type = types.attrsOf (types.submodule (
+        let
+          inputAttrs = types.attrsOf (types.oneOf [types.str types.int types.bool types.package]);
+        in
+        { config, name, ... }:
+        { options = {
+            from = mkOption {
+              type = inputAttrs;
+              example = { type = "indirect"; id = "nixpkgs"; };
+              description = "The flake reference to be rewritten.";
+            };
+            to = mkOption {
+              type = inputAttrs;
+              example = { type = "github"; owner = "my-org"; repo = "my-nixpkgs"; };
+              description = "The flake reference to which <option>from></option> is to be rewritten.";
+            };
+            flake = mkOption {
+              type = types.unspecified;
+              default = null;
+              example = literalExpression "nixpkgs";
+              description = ''
+                The flake input to which <option>from></option> is to be rewritten.
+              '';
+            };
+            exact = mkOption {
+              type = types.bool;
+              default = true;
+              description = ''
+                Whether the <option>from</option> reference needs to match exactly. If set,
+                a <option>from</option> reference like <literal>nixpkgs</literal> does not
+                match with a reference like <literal>nixpkgs/nixos-20.03</literal>.
+              '';
+            };
+          };
+          config = {
+            from = mkDefault { type = "indirect"; id = name; };
+            to = mkIf (config.flake != null)
+              ({ type = "path";
+                 path = config.flake.outPath;
+               } // lib.filterAttrs
+                 (n: v: n == "lastModified" || n == "rev" || n == "revCount" || n == "narHash")
+                 config.flake);
+          };
+        }
+      ));
+      default = {};
+      description = ''
+        A system-wide flake registry.
+      '';
+    };
   };
 
   config = {
@@ -389,8 +434,15 @@ in
     environment.etc."nix/nix.conf".source = nixConf;
 
     environment.etc."nix/nix.conf".knownSha256Hashes = [
-      "c4ecc3d541c163c8fcc954ccae6b8cab28c973dc283fea5995c69aaabcdf785f"  # nix installer
+      "7c2d80499b39256b03ee9abd3d6258343718306aca8d472c26ac32c9b0949093"  # nix installer
+      "19299897fa312d9d32b3c968c2872dd143085aa727140cec51f57c59083e93b9"
+      "c4ecc3d541c163c8fcc954ccae6b8cab28c973dc283fea5995c69aaabcdf785f"
     ];
+
+    environment.etc."nix/registry.json".text = builtins.toJSON {
+      version = 2;
+      flakes = mapAttrsToList (n: v: { inherit (v) from to exact; }) cfg.registry;
+    };
 
     # List of machines for distributed Nix builds in the format
     # expected by build-remote.
@@ -410,25 +462,7 @@ in
           ) cfg.buildMachines;
       };
 
-    nix.envVars =
-      optionalAttrs (!isNix20) {
-        NIX_CONF_DIR = "/etc/nix";
-
-        # Enable the copy-from-other-stores substituter, which allows
-        # builds to be sped up by copying build results from remote
-        # Nix stores.  To do this, mount the remote file system on a
-        # subdirectory of /run/nix/remote-stores.
-        NIX_OTHER_STORES = "/run/nix/remote-stores/*/nix";
-      }
-      // optionalAttrs cfg.distributedBuilds {
-        NIX_CURRENT_LOAD = "/run/nix/current-load";
-      }
-      // optionalAttrs (cfg.distributedBuilds && !isNix20) {
-        NIX_BUILD_HOOK = "${cfg.package}/libexec/nix/build-remote.pl";
-        NIX_REMOTE_SYSTEMS = "/etc/nix/machines";
-      };
-
-    environment.extraInit = optionalString (!isNix20) ''
+    environment.extraInit = ''
       # Set up secure multi-user builds: non-root users build through the
       # Nix daemon.
       if [ ! -w /nix/var/nix/db ]; then
@@ -440,12 +474,6 @@ in
     environment.variables = cfg.envVars //
       { NIX_PATH = concatStringsSep ":" cfg.nixPath;
       };
-
-    system.activationScripts.nix.text = mkIf cfg.distributedBuilds ''
-      if [ ! -d ${cfg.envVars.NIX_CURRENT_LOAD} ]; then
-          mkdir -p ${cfg.envVars.NIX_CURRENT_LOAD}
-      fi
-    '';
 
     system.activationScripts.nix-daemon.text = mkIf cfg.useDaemon ''
       if ! diff /etc/nix/nix.conf /run/current-system/etc/nix/nix.conf &> /dev/null; then

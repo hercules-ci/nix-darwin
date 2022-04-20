@@ -16,10 +16,12 @@
   ./system/defaults/screencapture.nix
   ./system/defaults/alf.nix
   ./system/defaults/loginwindow.nix
+  ./system/defaults/magicmouse.nix
   ./system/defaults/smb.nix
   ./system/defaults/SoftwareUpdate.nix
   ./system/defaults/spaces.nix
   ./system/defaults/trackpad.nix
+  ./system/defaults/universalaccess.nix
   ./system/etc.nix
   ./system/keyboard.nix
   ./system/launchd.nix
@@ -39,6 +41,7 @@
   ./services/autossh.nix
   ./services/buildkite-agent.nix
   ./services/chunkwm.nix
+  ./services/cachix-agent.nix
   ./services/dnsmasq.nix
   ./services/emacs.nix
   ./services/hercules-ci-agent
@@ -47,6 +50,7 @@
   ./services/lorri.nix
   ./services/mail/offlineimap.nix
   ./services/mopidy.nix
+  ./services/monitoring/telegraf.nix
   ./services/nix-daemon.nix
   ./services/nix-gc
   ./services/ofborg
@@ -55,9 +59,11 @@
   ./services/redis
   ./services/skhd
   ./services/spacebar
+  ./services/spotifyd.nix
   ./services/synapse-bt.nix
   ./services/synergy
   ./services/yabai
+  ./services/nextdns
   ./programs/bash
   ./programs/fish.nix
   ./programs/gnupg.nix
@@ -68,6 +74,7 @@
   ./programs/tmux.nix
   ./programs/vim.nix
   ./programs/zsh
+  ./homebrew.nix
   ./users
   ./users/nixbld
 ]

@@ -13,8 +13,6 @@ nix-build https://github.com/LnL7/nix-darwin/archive/master.tar.gz -A installer
 ./result/bin/darwin-installer
 ```
 
-or if you run into problems with that, try the older bootstrap.sh script
-
 > NOTE: the system activation scripts don't overwrite existing etc files, so files like `/etc/bashrc` and `/etc/zshrc` won't be
 > updated by default. If you didn't use the installer or skipped some of the options you'll have to take care of this yourself.
 > Either modify the existing file to source/import the one from `/etc/static` or remove it. Some examples:
@@ -44,7 +42,8 @@ nix-build https://github.com/LnL7/nix-darwin/archive/master.tar.gz -A uninstalle
 
 ## Example configuration
 
-Check out [modules/examples](https://github.com/LnL7/nix-darwin/tree/master/modules/examples) for some example configurations.
+Configuration lives in `~/.nixpkgs/darwin-configuration.nix`. Check out
+[modules/examples](https://github.com/LnL7/nix-darwin/tree/master/modules/examples) for some example configurations.
 
 ```nix
 { pkgs, ... }:
@@ -61,10 +60,62 @@ Check out [modules/examples](https://github.com/LnL7/nix-darwin/tree/master/modu
 }
 ```
 
+## Flakes (experimental)
+
+There is also preliminary support for building your configuration using a [flake](https://nixos.wiki/wiki/Flakes).  This
+is mostly based on the flake support that was added to NixOS.
+
+A minimal example of using an existing configuration.nix:
+
+```nix
+{
+  description = "John's darwin system";
+
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-20.09-darwin";
+    darwin.url = "github:lnl7/nix-darwin/master";
+    darwin.inputs.nixpkgs.follows = "nixpkgs";
+  };
+
+  outputs = { self, darwin, nixpkgs }: {
+    darwinConfigurations."Johns-MacBook" = darwin.lib.darwinSystem {
+      system = "x86_64-darwin";
+      modules = [ ./configuration.nix ];
+    };
+  };
+}
+```
+
+Inputs from the flake can also be passed to `darwinSystem`, these inputs are then
+accessible as an argument, similar to pkgs and lib inside the configuration.
+
+```nix
+darwin.lib.darwinSystem {
+  system = "x86_64-darwin";
+  modules = [ ... ];
+  inputs = { inherit darwin dotfiles nixpkgs; };
+}
+```
+
+Since the installer doesn't work with flakes out of the box yet nix-darwin will need to
+be to be bootstrapped using the installer or manually.  Afterwards the flake based
+configuration can be built.  The `hostname(1)` of your system will be used to decide
+which darwin configuration is applied if it's not specified explicitly in the flake ref.
+
+```sh
+nix build ~/.config/darwin\#darwinConfigurations.Johns-MacBook.system
+./result/sw/bin/darwin-rebuild switch --flake ~/.config/darwin
+```
+
 ## Manual Install
 
 ```bash
+# Before 10.15 Catalina
 sudo ln -s private/var/run /run
+# After 10.15 Catalina
+echo -e "run\tprivate/var/run" | sudo tee -a /etc/synthetic.conf
+/System/Library/Filesystems/apfs.fs/Contents/Resources/apfs.util -B
+/System/Library/Filesystems/apfs.fs/Contents/Resources/apfs.util -t
 
 # Configure the channel
 nix-channel --add https://github.com/LnL7/nix-darwin/archive/master.tar.gz darwin
@@ -114,7 +165,7 @@ $
 ```
 
 ```
-$ darwin-option services.activate-system.enable                                                                                                                                            ~/src/nix-darwin
+$ darwin-option services.activate-system.enable
 Value:
 true
 

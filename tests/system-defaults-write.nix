@@ -1,6 +1,9 @@
 { config, pkgs, ... }:
 
 {
+  system.defaults.NSGlobalDomain.AppleShowAllFiles = true;
+  system.defaults.NSGlobalDomain.AppleEnableMouseSwipeNavigateWithScrolls = false;
+  system.defaults.NSGlobalDomain.AppleEnableSwipeNavigateWithScrolls = false;
   system.defaults.NSGlobalDomain.AppleFontSmoothing = 1;
   system.defaults.NSGlobalDomain.AppleKeyboardUIMode = 3;
   system.defaults.NSGlobalDomain.ApplePressAndHoldEnabled = true;
@@ -11,6 +14,7 @@
   system.defaults.NSGlobalDomain.NSAutomaticPeriodSubstitutionEnabled = false;
   system.defaults.NSGlobalDomain.NSAutomaticQuoteSubstitutionEnabled = false;
   system.defaults.NSGlobalDomain.NSAutomaticSpellingCorrectionEnabled = false;
+  system.defaults.NSGlobalDomain.NSAutomaticWindowAnimationsEnabled = false;
   system.defaults.NSGlobalDomain.NSDisableAutomaticTermination = true;
   system.defaults.NSGlobalDomain.NSDocumentSaveNewDocumentsToCloud = false;
   system.defaults.NSGlobalDomain.NSNavPanelExpandedStateForSaveMode = true;
@@ -37,6 +41,9 @@
   system.defaults.screencapture.location = "/tmp";
   system.defaults.smb.NetBIOSName = "IMAC-000000";
   system.defaults.smb.ServerDescription = ''Darwin\\\\U2019s iMac'';
+  system.defaults.universalaccess.reduceTransparency = true;
+  system.defaults.universalaccess.closeViewScrollWheelToggle = true;
+  system.defaults.universalaccess.closeViewZoomFollowsFocus = true;
 
   test = ''
     echo >&2 "checking defaults write in /activate"
@@ -44,6 +51,9 @@
     grep "defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server 'ServerDescription' -string 'Darwin.*s iMac'" ${config.out}/activate
 
     echo >&2 "checking defaults write in /activate-user"
+    grep "defaults write -g 'AppleShowAllFiles' -bool YES" ${config.out}/activate-user
+    grep "defaults write -g 'AppleEnableMouseSwipeNavigateWithScrolls' -bool NO" ${config.out}/activate-user
+    grep "defaults write -g 'AppleEnableSwipeNavigateWithScrolls' -bool NO" ${config.out}/activate-user
     grep "defaults write -g 'AppleFontSmoothing' -int 1" ${config.out}/activate-user
     grep "defaults write -g 'AppleKeyboardUIMode' -int 3" ${config.out}/activate-user
     grep "defaults write -g 'ApplePressAndHoldEnabled' -bool YES" ${config.out}/activate-user
@@ -54,6 +64,7 @@
     grep "defaults write -g 'NSAutomaticPeriodSubstitutionEnabled' -bool NO" ${config.out}/activate-user
     grep "defaults write -g 'NSAutomaticQuoteSubstitutionEnabled' -bool NO" ${config.out}/activate-user
     grep "defaults write -g 'NSAutomaticSpellingCorrectionEnabled' -bool NO" ${config.out}/activate-user
+    grep "defaults write -g 'NSAutomaticWindowAnimationsEnabled' -bool NO" ${config.out}/activate-user
     grep "defaults write -g 'NSDisableAutomaticTermination' -bool YES" ${config.out}/activate-user
     grep "defaults write -g 'NSDocumentSaveNewDocumentsToCloud' -bool NO" ${config.out}/activate-user
     grep "defaults write -g 'NSNavPanelExpandedStateForSaveMode' -bool YES" ${config.out}/activate-user
@@ -78,5 +89,8 @@
     grep "defaults write com.apple.dock 'autohide-delay' -float 0.24" ${config.out}/activate-user
     grep "defaults write com.apple.dock 'orientation' -string 'left'" ${config.out}/activate-user
     grep "defaults write com.apple.screencapture 'location' -string '/tmp'" ${config.out}/activate-user
+    grep "defaults write com.apple.universalaccess 'reduceTransparency' -bool YES" ${config.out}/activate-user
+    grep "defaults write com.apple.universalaccess 'closeViewScrollWheelToggle' -bool YES" ${config.out}/activate-user
+    grep "defaults write com.apple.universalaccess 'closeViewZoomFollowsFocus' -bool YES" ${config.out}/activate-user
   '';
 }

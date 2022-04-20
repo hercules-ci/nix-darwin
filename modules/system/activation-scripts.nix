@@ -55,7 +55,6 @@ in
       ${cfg.activationScripts.extraActivation.text}
       ${cfg.activationScripts.groups.text}
       ${cfg.activationScripts.users.text}
-      ${cfg.activationScripts.nix.text}
       ${cfg.activationScripts.applications.text}
       ${cfg.activationScripts.patches.text}
       ${cfg.activationScripts.etc.text}
@@ -106,6 +105,7 @@ in
       ${cfg.activationScripts.extraUserActivation.text}
       ${cfg.activationScripts.userDefaults.text}
       ${cfg.activationScripts.userLaunchd.text}
+      ${cfg.activationScripts.homebrew.text}
 
       ${cfg.activationScripts.postUserActivation.text}
 

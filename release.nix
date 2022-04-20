@@ -118,11 +118,14 @@ let
     tests.sockets-nix-daemon = makeTest ./tests/sockets-nix-daemon.nix;
     tests.services-dnsmasq = makeTest ./tests/services-dnsmasq.nix;
     tests.services-nix-gc = makeTest ./tests/services-nix-gc.nix;
+    tests.services-nextdns = makeTest ./tests/services-nextdns.nix;
     tests.services-ofborg = makeTest ./tests/services-ofborg.nix;
     tests.services-offlineimap = makeTest ./tests/services-offlineimap.nix;
     tests.services-privoxy = makeTest ./tests/services-privoxy.nix;
+    tests.services-redis = makeTest ./tests/services-redis.nix;
     tests.services-skhd = makeTest ./tests/services-skhd.nix;
     tests.services-spacebar = makeTest ./tests/services-spacebar.nix;
+    tests.services-spotifyd = makeTest ./tests/services-spotifyd.nix;
     tests.services-synapse-bt = makeTest ./tests/services-synapse-bt.nix;
     tests.services-synergy = makeTest ./tests/services-synergy.nix;
     tests.services-yabai = makeTest ./tests/services-yabai.nix;

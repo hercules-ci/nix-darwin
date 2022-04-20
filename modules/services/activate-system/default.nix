@@ -21,6 +21,12 @@ in
 
     launchd.daemons.activate-system = {
       script = ''
+        set -e
+        set -o pipefail
+        export PATH="${pkgs.gnugrep}/bin:${pkgs.coreutils}/bin:@out@/sw/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+        systemConfig=$(cat ${config.system.profile}/systemConfig)
+
         # Make this configuration the current configuration.
         # The readlink is there to ensure that when $systemConfig = /system
         # (which is a symlink to the store), /run/current-system is still
@@ -30,8 +36,8 @@ in
         # Prevent the current configuration from being garbage-collected.
         ln -sfn /run/current-system /nix/var/nix/gcroots/current-system
 
+        ${config.system.activationScripts.etc.text}
         ${config.system.activationScripts.keyboard.text}
-        ${config.system.activationScripts.nix.text}
       '';
       serviceConfig.RunAtLoad = true;
       serviceConfig.KeepAlive.SuccessfulExit = false;

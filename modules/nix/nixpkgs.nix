@@ -4,10 +4,10 @@ with lib;
 
 let
   isConfig = x:
-    builtins.isAttrs x || builtins.isFunction x;
+    builtins.isAttrs x || lib.isFunction x;
 
   optCall = f: x:
-    if builtins.isFunction f
+    if lib.isFunction f
     then f x
     else f;
 
@@ -41,7 +41,7 @@ let
   overlayType = mkOptionType {
     name = "nixpkgs-overlay";
     description = "nixpkgs overlay";
-    check = builtins.isFunction;
+    check = lib.isFunction;
     merge = lib.mergeOneOption;
   };
 in
@@ -50,7 +50,7 @@ in
   options = {
     nixpkgs.config = mkOption {
       default = {};
-      example = literalExample
+      example = literalExpression
         ''
           { firefox.enableGeckoMediaPlayer = true;
             packageOverrides = pkgs: {
@@ -75,7 +75,7 @@ in
     nixpkgs.overlays = mkOption {
       type = types.listOf overlayType;
       default = [];
-      example = literalExample ''
+      example = literalExpression ''
         [ (self: super: {
             openssh = super.openssh.override {
               hpnSupport = true;
@@ -109,7 +109,7 @@ in
 
   config = {
 
-    # _module.args.pkgs is defined in ../../default.nix
+    # _module.args.pkgs is defined in ../../eval-config.nix
 
   };
 }

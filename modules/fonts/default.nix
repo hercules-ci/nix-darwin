@@ -7,8 +7,12 @@ let
 in
 
 {
+  imports = [
+    (mkRenamedOptionModule [ "fonts" "enableFontDir" ] [ "fonts" "fontDir" "enable" ])
+  ];
+
   options = {
-    fonts.enableFontDir = mkOption {
+    fonts.fontDir.enable = mkOption {
       default = false;
       description = ''
         Whether to enable font management and install configured fonts to
@@ -21,7 +25,7 @@ in
     fonts.fonts = mkOption {
       type = types.listOf types.path;
       default = [];
-      example = literalExample "[ pkgs.dejavu_fonts ]";
+      example = literalExpression "[ pkgs.dejavu_fonts ]";
       description = "List of fonts to install.";
     };
   };
